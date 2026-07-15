@@ -17,7 +17,7 @@ This workflow charts the collection of the patient identity, active retrieval an
 
 ```text
 [User]            [Presentation Layer]      [Orchestration Layer]      [Business Logic Layer]       [Data Access Layer]
-  |                   (ConsoleView)       (RiskAssessmentController)   (ClinicalRiskService)         (PatientModel)
+  |                   (ConsoleView)          (ConsoleController)       (ClinicalRiskService)         (PatientModel)
   |                        |                         |                           |                          |
   |--- Select Option 1 --->|                         |                           |                          |
   |                        |--- display_main_menu() >|                           |                          |
@@ -52,7 +52,7 @@ This workflow traces the command teardown loop initiated by the user when choosi
 
 ```text
 [User]            [Presentation Layer]      [Orchestration Layer]      [Business Logic Layer]       [Data Access Layer]
-  |                   (ConsoleView)       (RiskAssessmentController)   (ClinicalRiskService)         (PatientModel)
+  |                   (ConsoleView)          (ConsoleController)        (ClinicalRiskService)         (PatientModel)
   |                        |                         |                           |                          |
   |--- Select Option 2 --->|                         |                           |                          |
   |                        |--- display_main_menu() >|                           |                          |
@@ -115,7 +115,7 @@ Manages interactive layout formatting, standard out/in system pipes, interface b
 
 ### Orchestration Layer (The Controller)
 
-**Class:** `RiskAssessmentController`
+**Class:** `ConsoleController`
 
 Maintains core lifecycle system states by passing contexts from views down into core processing services, saving states to data caches, and driving structural workflow loops.
 
