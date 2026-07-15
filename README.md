@@ -10,6 +10,7 @@ Assistant Professor Dr Naruemon Pratanwanich (Ploy)
 ### Course Overview
 
 This 1-day crash course introduces non-programmers to **Vibe Coding**—the practice of designing, building, and refining a basic application through natural language interaction with AI. You will learn how to guide AI as your lead developer, build console and GUI applications using layered architecture, generate automated test suites, and iteratively enhance applications by evaluating AI-generated code, providing feedback, and incorporating new features.
+
 ---
 
 ### Learning Outcomes
@@ -22,6 +23,7 @@ By the end of this course, you will be able to:
 4. Version and manage your application code and documentation using the basic features of GitHub.
 5. Iteratively improve applications through feedback-driven interactions with AI, enabling feature enhancements while preserving the existing codebase.
 
+---
 
 ### Course Schedule
 
