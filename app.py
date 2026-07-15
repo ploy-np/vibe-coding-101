@@ -1,6 +1,10 @@
+import sqlite3
 import statistics
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
+
+import pandas as pd
+import streamlit as st
 
 # =====================================================================
 # CONFIGURATION SWITCH
@@ -63,6 +67,7 @@ class PatientModel:
 # =====================================================================
 # 1. NEW DATA ACCESS LAYER (SQLITE MODEL)
 # =====================================================================
+
 class SQLitePatientModel:
     """Manages raw patient data storage, retrieval, and cleaning using an SQLite database."""
     
@@ -89,12 +94,11 @@ class SQLitePatientModel:
                 )
             """)
             
-            # Check if seeded data already exists
             cursor.execute("SELECT COUNT(*) FROM patients")
             if cursor.fetchone()[0] == 0:
                 mock_data = [
                     (101, 95.0, 22.5, 28.0, 115.0),
-                    (102, 145.0, 0.0, 54.0, 135.0),  # Anomaly (BMI = 0)
+                    (102, 145.0, 0.0, 54.0, 135.0),
                     (103, 112.0, 29.1, 42.0, 122.0),
                     (104, 180.0, 36.4, 61.0, 142.0)
                 ]
@@ -104,7 +108,6 @@ class SQLitePatientModel:
         self._clean_initial_data()
 
     def _clean_initial_data(self) -> None:
-        """Finds any BMI of 0 and replaces it with the median BMI of valid patients."""
         import statistics
         with self._get_connection() as conn:
             cursor = conn.cursor()
@@ -116,14 +119,12 @@ class SQLitePatientModel:
             conn.commit()
 
     def get_all_ids(self) -> List[int]:
-        """Returns a sorted list of all existing Patient IDs."""
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT id FROM patients ORDER BY id ASC")
             return [row[0] for row in cursor.fetchall()]
 
     def get_patient(self, patient_id: int) -> Optional[Dict[str, float]]:
-        """Retrieves a patient's metrics mapped to standard keys."""
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT glucose, bmi, age, blood_pressure FROM patients WHERE id = ?", (patient_id,))
@@ -138,7 +139,6 @@ class SQLitePatientModel:
             return None
 
     def update_patient(self, patient_id: int, updated_metrics: Dict[str, float]) -> bool:
-        """Updates an existing patient's profile in the SQLite database."""
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -154,6 +154,12 @@ class SQLitePatientModel:
             ))
             conn.commit()
             return cursor.rowcount > 0
+
+    def get_raw_dataframe_dump():
+        """Fetches the exact real-time state of the physical table to prove persistence."""
+        with sqlite3.connect("patients.db") as conn:
+            return pd.read_sql_query("SELECT * FROM patients ORDER BY id ASC", conn)
+
 # =====================================================================
 # 2. BUSINESS LOGIC LAYER (SERVICE)
 # =====================================================================
@@ -264,65 +270,78 @@ class StreamlitView:
     """Handles system layout, user interactions, and visual reports via a web-based UI."""
     
     @staticmethod
-    def render_ui(model: PatientModel, service: ClinicalRiskService) -> None:
+    def render_ui(model: Any, service: ClinicalRiskService) -> None:
         import streamlit as st
+        import pandas as pd
         
-        st.set_page_config(page_title="Diabetes Risk Scoring System", page_icon="🩺", layout="centered")
+        st.set_page_config(page_title="Diabetes Risk Scoring System", page_icon="🩺", layout="wide")
         
         st.title("🩺 Diabetes Risk Scoring System")
         st.markdown("---")
         
-        # 1. Fetch available patients
-        valid_ids = model.get_all_ids()
+        # Split layout into left operation side and right live-database viewer side
+        left_panel, right_panel = st.columns([3, 2])
         
-        # 2. Patient Selection Panel
-        st.sidebar.header("Patient Selection")
-        selected_id = st.sidebar.selectbox("Select Patient ID to Assess", options=valid_ids)
-        
-        if selected_id:
-            # Fetch patient data deep copy
-            patient_metrics = model.get_patient(selected_id)
+        with left_panel:
+            st.subheader("Select Patient Profile")
+            valid_ids = model.get_all_ids()
+            selected_id = st.selectbox("Choose Patient ID to Assess", options=valid_ids)
             
-            st.subheader(f"Clinical Profile: Patient {selected_id}")
+            if selected_id:
+                patient_metrics = model.get_patient(selected_id)
+                st.markdown(f"### Clinical Metrics for Patient **{selected_id}**")
+                
+                with st.form(key=f"patient_form_{selected_id}"):
+                    updated_metrics = {}
+                    cols = st.columns(2)
+                    
+                    for idx, (metric, current_val) in enumerate(patient_metrics.items()):
+                        col = cols[idx % 2]
+                        updated_metrics[metric] = col.number_input(
+                            label=f"{metric}",
+                            value=float(current_val),
+                            step=0.1,
+                            format="%.1f"
+                        )
+                    
+                    submit_button = st.form_submit_button(label="Update & Evaluate Risk Assessment")
+                
+                if submit_button:
+                    model.update_patient(selected_id, updated_metrics)
+                    score, category = service.evaluate_patient_risk(updated_metrics)
+                    
+                    st.markdown("---")
+                    st.subheader("📊 Diagnostic Risk Report")
+                    
+                    category_upper = category.upper()
+                    if "HIGH" in category_upper:
+                        st.error(f"**Risk Category:** {category_upper}")
+                    elif "MODERATE" in category_upper:
+                        st.warning(f"**Risk Category:** {category_upper}")
+                    else:
+                        st.success(f"**Risk Category:** {category_upper}")
+                    
+                    col_metric1, col_metric2 = st.columns(2)
+                    col_metric1.metric(label="Patient ID", value=selected_id)
+                    col_metric2.metric(label="Cumulative Score", value=f"{score} pts")
+                    
+                    # Force rerun to instantly flash persisting changes to the database monitor
+                    st.rerun()
+
+        with right_panel:
+            st.subheader("🗄️ Live SQLite Database State")
+            st.info("The table below displays the actual data resting inside `patients.db` file right now.")
             
-            # 3. Input Fields / Form Panel for modifications
-            with st.form(key=f"patient_form_{selected_id}"):
-                updated_metrics = {}
-                cols = st.columns(2)
+            # Dynamically handle checking implementation capability safely
+            if hasattr(model, 'db_path'):
+                df = SQLitePatientModel.get_raw_dataframe_dump()
+                st.dataframe(df, use_container_width=True, hide_index=True)
                 
-                for idx, (metric, current_val) in enumerate(patient_metrics.items()):
-                    col = cols[idx % 2]
-                    updated_metrics[metric] = col.number_input(
-                        label=f"{metric}",
-                        value=float(current_val),
-                        step=0.1,
-                        format="%.1f"
-                    )
-                
-                submit_button = st.form_submit_button(label="Evaluate Risk Assessment")
-            
-            # 4. Handle form submission and update database context safely
-            if submit_button:
-                model.update_patient(selected_id, updated_metrics)
-                
-                # 5. Evaluate and display report panel
-                score, category = service.evaluate_patient_risk(updated_metrics)
-                
-                st.markdown("---")
-                st.subheader("📊 Diagnostic Risk Report")
-                
-                # Match visual coloring container based on risk profile severity
-                category_upper = category.upper()
-                if "HIGH" in category_upper:
-                    st.error(f"**Risk Category:** {category_upper}")
-                elif "MODERATE" in category_upper:
-                    st.warning(f"**Risk Category:** {category_upper}")
-                else:
-                    st.success(f"**Risk Category:** {category_upper}")
-                
-                col_metric1, col_metric2 = st.columns(2)
-                col_metric1.metric(label="Patient ID", value=selected_id)
-                col_metric2.metric(label="Cumulative Score", value=f"{score} pts")
+                st.caption(f"Connected to local storage engine: `{model.db_path}`")
+                if st.button("🔄 Refresh DB Snapshot"):
+                    st.rerun()
+            else:
+                st.warning("Running on volatile In-Memory engine framework. Persistent snapshot display unavailable.")
 
 # =====================================================================
 # 4. ORCHESTRATION LAYER (CONTROLLER)
