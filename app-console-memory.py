@@ -301,3 +301,4 @@ if __name__ == "__main__":
     
     app = ConsoleController(model=db_model, service=rules_service, view=ui_view)
     app.run()
+    
