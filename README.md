@@ -13,6 +13,13 @@ This 1-day crash course introduces non-programmers to **Vibe Coding**—the prac
 
 ---
 
+### Tools & Environments
+- Colab
+- Streamlit Playground
+- Streamlit Cloud
+
+---
+
 ### Learning Outcomes
 
 By the end of this course, you will be able to:
