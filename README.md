@@ -41,7 +41,7 @@ By the end of this course, you will be able to:
 | **10:30 - 12:00** | **Code Review — Understand and evaluate AI-generated code.** |
 | **12:00 - 13:00** | *Lunch Break* |
 | **13:00 - 13:30** | **Fixing and Versioning Your App — Project Version Control via GitHub** |
-| **13:30 - 14:15** | **Making Changes I — Targeted Feature Updates and Refinement** |
+| **13:30 - 14:15** | **Quiz** | CLO3
 | **14:15 - 14:30** | *Afternoon Break* |
-| **14:30 - 15:30** | **Making Changes II — Evolving the Architecture with Layered Changes (UI+DB)** |
+| **14:30 - 15:30** | **Making Changes I & II — Targeted Feature Updates and Refinement**|
 | **15:30 - 16:00** | **Wrap-Up** |
