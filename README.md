@@ -26,7 +26,7 @@ By the end of this course, you will be able to:
 
 1. Recognize the key stages of the Software Development Life Cycle (SDLC) and how AI can support each stage.
 2. Use structured prompts to guide AI in designing and building console and GUI applications using layered architecture with a basic 3-tier testing suite.
-3. Prompt AI to generate a structured Technical Design Document (TDD) that explains the codebase, enabling easier review, understanding, and verification.
+3. Verify AI-generated code using structured Technical Design Documents (TDDs) generated via AI prompts.
 4. Version and manage your application code and documentation using the basic features of GitHub.
 5. Iteratively improve applications through feedback-driven interactions with AI, enabling feature enhancements while preserving the existing codebase.
 
