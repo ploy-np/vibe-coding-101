@@ -25,7 +25,7 @@
 
 ```
 
-* **Status:** Unreviewed
+* **Status:** Accepted
 
 ---
 
