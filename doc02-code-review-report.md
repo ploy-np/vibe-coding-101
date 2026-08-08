@@ -3,7 +3,7 @@
 ## 1. Executive Summary
 
 * **Primary Concerns:** The code lacks input validation for negative numbers and non-numeric clinical values, mutates internal model state when returning dictionary references, and blocks non-interactive environments (like Google Colab execution) due to infinite interactive `input()` loops in `ConsoleController.run()`.
-* **Refactoring Priority:** High
+* **Refactoring Priority:** Medium
 
 ---
 
