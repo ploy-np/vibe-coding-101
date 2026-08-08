@@ -53,11 +53,11 @@ This workflow traces the command teardown loop initiated by the user when choosi
 ```text
 [User]            [Presentation Layer]      [Orchestration Layer]      [Business Logic Layer]       [Data Access Layer]
   |                   (ConsoleView)       (RiskAssessmentController)   (ClinicalRiskService)         (PatientModel)
-  |                        |                         |                           |                          |
+  |                        |<----------------run()---|                           |                          |
+  |<-- display_main_menu()-|                         |                           |                          |
   |--- Select Option 2 --->|                         |                           |                          |
-  |                        |--- display_main_menu() >|                           |                          |
-  |                        |                         |--- run() [Breaks Loop]    |                          |
-  |<-- Prints "Goodbye" ---|                         |                           |                          |
+  |                        |--- return 2 ----------> |                           |                          |
+  |<-- Prints "Goodbye" ---|-------------------------|                           |                          |
 
 ```
 
